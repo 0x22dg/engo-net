@@ -17,7 +17,7 @@ class Key {
     const std::vector<uint8_t>& get_pub() const noexcept;
     const std::vector<uint8_t>& get_priv() const noexcept;
 
-   private:
+   protected:
     KeyType type;
 
     std::vector<uint8_t> pub;
