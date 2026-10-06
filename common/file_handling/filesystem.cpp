@@ -24,3 +24,7 @@ std::string filesystem::get_main_dir(bool with_name) {
     if (with_name) return get_home_path() + path;
     return path;
 }
+
+std::string filesystem::get_identity_dir(bool with_home) {
+    return get_main_dir(with_home) + "identity/";
+}

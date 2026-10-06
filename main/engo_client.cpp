@@ -6,7 +6,8 @@ EngoClient::EngoClient(size_t wcols, size_t wrows)
     : EngoNet(),
       tui(
           engo::Pair<size_t, size_t>{wcols, wrows},
-          [this](const std::string& cmd) { execute_cmd(cmd); }, get_logger()) {
+          [this](const std::string& cmd) { execute_cmd(cmd); }, get_logger()),
+      temp_buf{"", ""} {
     get_logger().set_callback(
         [this](const std::string& type, const std::string& msg) {
             tui.add_log(type, msg);
@@ -58,9 +59,10 @@ void EngoClient::execute_cmd(const std::string& input) {
         case CommandType::CONNECT:
             if (cmd.args.size() != 2) {
                 get_logger().tlog(Logger::ERROR,
-                                  "usage: start <ip_addr> <port>");
+                                  "usage: connect <ip_addr> <port>");
                 break;
             }
+
             if (!user) {
                 user = std::make_unique<User>(
                     cmd.args[0], static_cast<uint16_t>(std::stoul(cmd.args[1])),

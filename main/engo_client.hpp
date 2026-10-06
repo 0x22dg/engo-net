@@ -16,6 +16,8 @@ class EngoClient : public EngoNet {
     ClientTUI     tui;
     CommandParser command_parser;
 
+    engo::Pair<std::string, std::string> temp_buf;
+
    private:
     void stop_overall() override;
     void stop_network() override;

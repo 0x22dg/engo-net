@@ -7,6 +7,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+find_package(OpenSSL REQUIRED)
 find_package(SQLite3 REQUIRED)
 
 add_executable(engo-net
@@ -38,4 +39,5 @@ add_executable(engo-net
 
 target_link_libraries(engo-net
     SQLite::SQLite3
+    OpenSSL::Crypto
 )
