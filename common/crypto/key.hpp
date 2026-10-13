@@ -9,6 +9,8 @@
 class Key {
    public:
     Key(KeyType type, size_t cap);
+    Key(KeyType type, size_t cap, const std::string& save_path,
+        const std::string& save_name);
 
     bool save(const std::string& save_path, const std::string& save_name) const;
 
@@ -26,4 +28,5 @@ class Key {
    private:
     bool save_key_file(const std::string&          path,
                        const std::vector<uint8_t>& v) const;
+    bool load_key_file(const std::string& path, std::vector<uint8_t>& v);
 };

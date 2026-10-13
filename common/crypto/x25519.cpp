@@ -13,7 +13,8 @@ X25519::X25519() : Key{KeyType::X25519, 32} {
     PKEY pkey(EVP_PKEY_Q_keygen(nullptr, nullptr, "X25519"));
     if (!pkey) throw std::runtime_error("failed to init keygen for x25519 key");
 
-    size_t publen = sizeof pub, privlen = sizeof priv;
+    size_t publen = pub.size();
+    size_t privlen = priv.size();
     if (EVP_PKEY_get_raw_public_key(pkey.get(), pub.data(), &publen) != 1 ||
         EVP_PKEY_get_raw_private_key(pkey.get(), priv.data(), &privlen) != 1)
         throw std::runtime_error("raw key export failed");
