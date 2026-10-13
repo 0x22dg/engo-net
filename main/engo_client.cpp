@@ -13,6 +13,20 @@ EngoClient::EngoClient(size_t wcols, size_t wrows)
             tui.add_log(type, msg);
         });
 
+    std::string nickname = get_config().get({"general", "nickname"});
+    if (!engo::filesystem::are_user_keys_exist(nickname)) {
+        identity = std::make_unique<Identity>(nickname);
+    } else {
+        std::string kpath = engo::filesystem::get_identity_dir(1);
+        kpath.pop_back();
+
+        engo::Pair<std::string, std::string> edmeta = {kpath,
+                                                       "ed25519-" + nickname};
+        engo::Pair<std::string, std::string> xmeta = {kpath,
+                                                      "x25519-" + nickname};
+        identity = std::make_unique<Identity>(nickname, edmeta, xmeta);
+    }
+
     tui_thread = std::thread([this] {
         while (is_running()) {
             using namespace std::chrono_literals;

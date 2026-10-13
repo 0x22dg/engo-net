@@ -8,6 +8,7 @@ class ED25519 : public Key {
 
    public:
     ED25519();
+    ED25519(const std::string& save_path, const std::string& save_name);
     ~ED25519();
 
     Signature sign(const std::vector<uint8_t>& msg) const;

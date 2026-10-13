@@ -26,6 +26,9 @@ ED25519::ED25519() : Key(KeyType::ED25519, 32) {
         throw std::runtime_error("failed to get private or public ed25519 key");
 }
 
+ED25519::ED25519(const std::string& save_path, const std::string& save_name)
+    : Key(KeyType::ED25519, 32, save_path, save_name) {}
+
 ED25519::~ED25519() { OPENSSL_cleanse(priv.data(), priv.size()); }
 
 ED25519::Signature ED25519::sign(const std::vector<uint8_t>& msg) const {

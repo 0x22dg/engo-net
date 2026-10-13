@@ -28,3 +28,8 @@ std::string filesystem::get_main_dir(bool with_name) {
 std::string filesystem::get_identity_dir(bool with_home) {
     return get_main_dir(with_home) + "identity/";
 }
+
+bool filesystem::are_user_keys_exist(const std::string& nickname) {
+    std::string path = get_identity_dir(1) + "ed25519-" + nickname;
+    return std::filesystem::exists(path);
+}

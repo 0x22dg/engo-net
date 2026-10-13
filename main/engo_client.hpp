@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../client/identity.hpp"
 #include "../client/tui/client_tui.hpp"
 #include "../client/user.hpp"
 #include "../common/command_parser.hpp"
@@ -11,7 +12,8 @@ class EngoClient : public EngoNet {
     ~EngoClient();
 
    private:
-    std::unique_ptr<User> user;
+    std::unique_ptr<User>     user;
+    std::unique_ptr<Identity> identity;
 
     ClientTUI     tui;
     CommandParser command_parser;

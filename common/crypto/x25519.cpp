@@ -20,6 +20,9 @@ X25519::X25519() : Key{KeyType::X25519, 32} {
         throw std::runtime_error("raw key export failed");
 }
 
+X25519::X25519(const std::string& save_path, const std::string& save_name)
+    : Key(KeyType::X25519, 32, save_path, save_name) {}
+
 X25519::~X25519() { OPENSSL_cleanse(priv.data(), priv.size()); }
 
 std::string X25519::hex(const unsigned char* b, size_t n) {
