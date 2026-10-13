@@ -20,6 +20,7 @@ add_executable(engo-net
     server/tui/server_tui.cpp
     client/tcp_client.cpp
     client/user.cpp
+    client/identity.cpp
     client/tui/client_tui.cpp
     common/logger.cpp
     common/command_parser.cpp
@@ -35,6 +36,9 @@ add_executable(engo-net
     common/tui/text_input.cpp
     common/tui/console.cpp
     common/tui/input_handler.cpp
+    common/crypto/key.cpp
+    common/crypto/ed25519.cpp
+    common/crypto/x25519.cpp
 )
 
 target_link_libraries(engo-net

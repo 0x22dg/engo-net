@@ -13,6 +13,7 @@ EngoNet::EngoNet() : run(1) {
     std::string cfg_file_name = "config.engo";
     config = std::make_unique<Config>(engo::filesystem::get_main_dir(1) +
                                       cfg_file_name);
+    config->load();
 }
 
 void EngoNet::quit() noexcept { run = 0; }

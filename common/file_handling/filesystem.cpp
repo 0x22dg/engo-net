@@ -12,9 +12,15 @@ void filesystem::init() {
     //  /config
     //  /logs
     //  /db
-    std::string main_dir = "/.engo-net/";
-    if (!std::filesystem::exists(home + main_dir))
+    std::string main_dir = "/.engo-net";
+    if (!std::filesystem::exists(home + main_dir)) {
         std::filesystem::create_directory(home + main_dir);
+    }
+
+    std::string identity_dir = home + main_dir + "/identity";
+    if (!std::filesystem::exists(identity_dir)) {
+        std::filesystem::create_directory(identity_dir);
+    }
 }
 
 std::string filesystem::get_home_path() { return std::string(getenv("HOME")); }
