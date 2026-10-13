@@ -34,6 +34,13 @@ EngoClient::EngoClient(size_t wcols, size_t wrows)
             std::this_thread::sleep_for(16ms);
         }
     });
+
+    get_logger().log(Logger::INFO, "###" + std::string(CONFIG_ENGO_NAME) +
+                                       " client side + app started");
+    get_logger().log(Logger::INFO,
+                     "### version: " + std::string(CONFIG_ENGO_VERSION));
+    get_logger().log(Logger::INFO,
+                     "### source: " + std::string(CONFIG_ENGO_WEB));
 }
 
 EngoClient::~EngoClient() { stop_overall(); }
@@ -44,6 +51,8 @@ void EngoClient::stop_overall() {
     if (tui_thread.joinable()) {
         tui_thread.join();
     }
+
+    get_logger().log(Logger::INFO, "engo-net client stopped overall");
 }
 
 void EngoClient::stop_network() {
@@ -55,6 +64,8 @@ void EngoClient::stop_network() {
     if (network_thread.joinable()) {
         network_thread.join();
     }
+
+    get_logger().log(Logger::INFO, "network stopped");
 }
 
 void EngoClient::execute_cmd(const std::string& input) {
@@ -78,16 +89,24 @@ void EngoClient::execute_cmd(const std::string& input) {
             }
 
             if (!user) {
-                user = std::make_unique<User>(
-                    cmd.args[0], static_cast<uint16_t>(std::stoul(cmd.args[1])),
-                    [this](const std::string& msg) {
-                        tui.handle_network_msgs(msg);
-                    },
-                    get_logger());
+                try {
+                    user = std::make_unique<User>(
+                        cmd.args[0],
+                        static_cast<uint16_t>(std::stoul(cmd.args[1])),
+                        [this](const std::string& msg) {
+                            tui.handle_network_msgs(msg);
+                        },
+                        get_logger());
 
-                network_thread = std::thread([this] { user->run(); });
-                get_logger().tlog(Logger::INFO, "connected to ", cmd.args[0],
-                                  ":", cmd.args[1]);
+                    network_thread = std::thread([this] { user->run(); });
+                    get_logger().tlog(Logger::INFO, "connected to ",
+                                      cmd.args[0], ":", cmd.args[1]);
+                } catch (const std::exception& e) {
+                    get_logger().log(Logger::ERROR,
+                                     "failed to init network user interface: " +
+                                         std::string(e.what()));
+                    throw;
+                }
             } else {
                 get_logger().tlog(Logger::ERROR,
                                   "you already connected to the server");

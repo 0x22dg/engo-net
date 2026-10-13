@@ -17,6 +17,8 @@ User::User(const std::string& addr, uint16_t port, MessageCallback msg_callback,
 
     tcpc.get_socket().make_non_blocking();
     connection = std::make_unique<Connection>(tcpc.get_socket().get());
+
+    logger.log(Logger::INFO, "network user interface initialized");
 }
 
 void User::run() {
@@ -39,7 +41,10 @@ void User::run() {
     }
 }
 
-void User::stop() noexcept { enabled = 0; }
+void User::stop() noexcept {
+    enabled = 0;
+    logger.log(Logger::INFO, "network user interface stopped");
+}
 
 bool User::send(const std::string& message) {
     engo::Packet packet(engo::MESSAGE,

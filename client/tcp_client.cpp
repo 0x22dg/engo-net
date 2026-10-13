@@ -9,6 +9,8 @@ TCP_Client::TCP_Client(const std::string& m_addr, uint16_t port, Logger& logger)
     s_addr.sin_family = AF_INET;
     s_addr.sin_addr.s_addr = inet_addr(m_addr.c_str());
     s_addr.sin_port = htons(port);
+
+    logger.log(Logger::INFO, "tcp client initialized");
 }
 
 bool TCP_Client::connect() {

@@ -16,7 +16,10 @@ EngoNet::EngoNet() : run(1) {
     config->load();
 }
 
-void EngoNet::quit() noexcept { run = 0; }
+void EngoNet::quit() noexcept {
+    run = 0;
+    logger->log(Logger::INFO, "quiting from app");
+}
 
 bool EngoNet::is_running() const noexcept { return run; }
 

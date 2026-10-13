@@ -17,6 +17,13 @@ EngoServer::EngoServer(size_t wcols, size_t wrows)
             std::this_thread::sleep_for(16ms);
         }
     });
+
+    get_logger().log(Logger::INFO, "###" + std::string(CONFIG_ENGO_NAME) +
+                                       " server side app started");
+    get_logger().log(Logger::INFO,
+                     "### version: " + std::string(CONFIG_ENGO_VERSION));
+    get_logger().log(Logger::INFO,
+                     "### source: " + std::string(CONFIG_ENGO_WEB));
 }
 
 EngoServer::~EngoServer() { stop_overall(); }
@@ -27,6 +34,8 @@ void EngoServer::stop_overall() {
     if (tui_thread.joinable()) {
         tui_thread.join();
     }
+
+    get_logger().log(Logger::INFO, "engo-net server stopped overall");
 }
 
 void EngoServer::stop_network() {
@@ -38,6 +47,8 @@ void EngoServer::stop_network() {
     if (network_thread.joinable()) {
         network_thread.join();
     }
+
+    get_logger().log(Logger::INFO, "engo-net network stopped");
 }
 
 void EngoServer::execute_cmd(const std::string& input) {
