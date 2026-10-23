@@ -6,14 +6,32 @@
 
 #include "../common/utils/pair.hpp"
 
-enum ServerStatus { SHUTDOWN, RUNNING, STOPPED };
+class ServerState {
+   public:
+    enum Status { SHUTDOWN, RUNNING, STOPPED, UNKNOWN };
 
-struct ServerState {
-    ServerStatus status = SHUTDOWN;
-    std::string  addr = "";
-    uint16_t     port = 0;
+   public:
+    ServerState();
+    ServerState(Status status, const std::string& addr, uint16_t port);
+
+    Status             get_status() const noexcept;
+    const std::string& get_addr() const noexcept;
+    uint16_t           get_port() const noexcept;
+    const char*        get_status_msg() const noexcept;
+    const std::vector<engo::Pair<std::string, uint16_t>>& get_client()
+        const noexcept;
+
+    void set_addr(const std::string& addr);
+    void set_port(uint16_t port);
+    bool set_status(Status status);
+    void push_client(const std::string& addr, uint16_t port);
+
+   private:
+    Status      status;
+    std::string addr;
+    uint16_t    port;
 
     std::vector<engo::Pair<std::string, uint16_t>> clients;
 
-    const char* status_msgs[3] = {"SHUTDOWN", "RUNNING", "STOPPED"};
+    const char* status_msgs[4] = {"SHUTDOWN", "RUNNING", "STOPPED", "UNKNOWN"};
 };

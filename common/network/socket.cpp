@@ -9,6 +9,11 @@ Socket::Socket() : m_socket(-1) {
     if (m_socket == -1) throw std::runtime_error("failed to create the socket");
 }
 
+Socket::Socket(int m_socket) : m_socket(m_socket) {
+    if (m_socket == -1)
+        throw std::runtime_error("failed to load the socket fd");
+}
+
 Socket::~Socket() {
     if (m_socket >= 0) close(m_socket);
 }

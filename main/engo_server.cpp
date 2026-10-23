@@ -4,7 +4,8 @@ EngoServer::EngoServer(size_t wcols, size_t wrows)
     : EngoNet(),
       tui(
           engo::Pair<size_t, size_t>{wcols, wrows}, state,
-          [this](const std::string& cmd) { execute_cmd(cmd); }, get_logger()) {
+          [this](const std::string& cmd) { execute_cmd(cmd); }, get_logger()),
+      state() {
     get_logger().set_callback(
         [this](const std::string& type, const std::string& msg) {
             tui.add_log(type, msg);

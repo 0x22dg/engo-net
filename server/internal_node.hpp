@@ -35,11 +35,13 @@ class InternalNode {
     std::vector<epoll_event> events;
 
     std::unordered_map<int, Connection> clients;
+    std::unordered_map<int, Connection> unverified_clients;
 
     bool enabled;
 
    private:
-    int receive(ServerState& state);
+    int  receive(ServerState& state);
+    void client_disconnect(int& fd);
 
     template <typename T>
     void client_disconnect(int& fd, T it) {

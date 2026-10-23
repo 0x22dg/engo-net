@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "packet.hpp"
+#include "socket.hpp"
 
 #define DEF_BUF_SIZE 1024
 
@@ -30,11 +31,11 @@ class Connection {
 
     std::unique_ptr<engo::Packet> get_ready_packet();
 
-    int  get_socket() const noexcept;
-    bool is_closed() const noexcept;
+    const Socket& get_socket() const noexcept;
+    bool          is_closed() const noexcept;
 
    private:
-    int m_socket;
+    Socket m_socket;
 
     std::vector<uint8_t> recv_buf;
 

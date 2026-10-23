@@ -12,17 +12,10 @@ Connection::Connection(int m_socket) : m_socket(m_socket), closed(0) {
 
 Connection::~Connection() { close(); }
 
-void Connection::close() noexcept {
-    if (m_socket >= 0) {
-        ::close(m_socket);
-        m_socket = -1;
-    }
-
-    closed = 1;
-}
+void Connection::close() noexcept { closed = 1; }
 
 Connection::Connection(Connection&& other) noexcept
-    : m_socket(other.m_socket),
+    : m_socket(std::move(other.m_socket)),
       recv_buf(std::move(other.recv_buf)),
       closed(other.closed) {
     other.m_socket = -1;
@@ -34,7 +27,7 @@ Connection& Connection::operator=(Connection&& other) noexcept {
 
     close();
 
-    m_socket = other.m_socket;
+    m_socket = std::move(other.m_socket);
     recv_buf = std::move(other.recv_buf);
     closed = other.closed;
 
@@ -62,7 +55,8 @@ bool Connection::send(const engo::Packet& packet) {
     size_t sent = 0;
 
     while (sent < total_size) {
-        ssize_t val = ::send(m_socket, raw.data() + sent, raw.size() - sent, 0);
+        ssize_t val =
+            ::send(m_socket.get(), raw.data() + sent, raw.size() - sent, 0);
 
         if (val < 0) {
             if (errno == EAGAIN || errno == EWOULDBLOCK) continue;
@@ -78,7 +72,7 @@ bool Connection::send(const engo::Packet& packet) {
 bool Connection::recv() {
     char temp[4096];
     while (1) {
-        ssize_t val = ::recv(m_socket, temp, sizeof(temp), 0);
+        ssize_t val = ::recv(m_socket.get(), temp, sizeof(temp), 0);
         if (val > 0) {
             recv_buf.insert(recv_buf.end(), temp, temp + val);
             parse_raw(recv_buf);
@@ -105,7 +99,7 @@ std::unique_ptr<engo::Packet> Connection::get_ready_packet() {
     return p;
 }
 
-int Connection::get_socket() const noexcept { return m_socket; }
+const Socket& Connection::get_socket() const noexcept { return m_socket; }
 
 bool Connection::is_closed() const noexcept { return closed; }
 

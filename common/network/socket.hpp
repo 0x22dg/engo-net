@@ -7,6 +7,7 @@
 class Socket {
    public:
     Socket();
+    Socket(int m_socket);
     ~Socket();
 
     Socket(const Socket&) = delete;
