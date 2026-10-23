@@ -97,58 +97,8 @@ void InternalNode::run() {
                     continue;
                 }
 
-                // handling socket in the unverified clients holder
-                auto it = unverified_clients.find(fd);
-                if (it != unverified_clients.end()) {
-                    Connection& connection = it->second;
-                    if (events[i].events & EPOLLIN) {
-                        if (!connection.recv()) {
-                            client_disconnect(fd, it);
-                            continue;
-                        }
-                    }
-
-                    while (auto packet = connection.get_ready_packet()) {
-                        if (packet->header.type == engo::PacketType::AUTH) {
-                        } else if (packet->header.type ==
-                                   engo::PacketType::DISCONNECT) {
-                            logger.tlog(Logger::INFO,
-                                        "disconnecting the unverified user");
-                            client_disconnect(fd);
-                            break;
-                        } else if (packet->header.type ==
-                                   engo::PacketType::ERROR) {
-                            logger.tlog(
-                                Logger::INFO,
-                                "error received from the unverified user");
-                            client_disconnect(fd);
-                            break;
-                        }
-                    }
-                }
-
-                // handling socket in the verified clients holder
-                it = clients.find(fd);
-                if (it != clients.end()) {
-                    Connection& connection = it->second;
-                    if (events[i].events & EPOLLIN) {
-                        if (!connection.recv()) {
-                            client_disconnect(fd, it);
-                            continue;
-                        }
-                    }
-
-                    while (auto packet = connection.get_ready_packet()) {
-                        if (packet->header.type == engo::PacketType::MESSAGE) {
-                        } else if (packet->header.type ==
-                                   engo::PacketType::DISCONNECT) {
-                            break;
-                        } else if (packet->header.type ==
-                                   engo::PacketType::ERROR) {
-                            break;
-                        }
-                    }
-                }
+                if (!handle_unverified(fd, i)) continue;
+                if (!handle_verified(fd, i)) continue;
             }
         }
     }
@@ -157,6 +107,58 @@ void InternalNode::run() {
 void InternalNode::stop() noexcept { enabled = 0; }
 
 bool InternalNode::is_enabled() const noexcept { return enabled; }
+
+bool InternalNode::handle_unverified(int fd, size_t idx) {
+    auto it = unverified_clients.find(fd);
+    if (it == unverified_clients.end()) return 1;
+
+    Connection& connection = it->second;
+    if (events[idx].events & EPOLLIN) {
+        if (!connection.recv()) {
+            client_disconnect(fd, it);
+            return 0;
+        }
+    }
+
+    while (auto packet = connection.get_ready_packet()) {
+        if (packet->header.type == engo::PacketType::AUTH) {
+        } else if (packet->header.type == engo::PacketType::DISCONNECT) {
+            logger.tlog(Logger::INFO, "disconnecting the unverified user");
+            client_disconnect(fd);
+            break;
+        } else if (packet->header.type == engo::PacketType::ERROR) {
+            logger.tlog(Logger::INFO,
+                        "error received from the unverified user");
+            client_disconnect(fd);
+            break;
+        }
+    }
+
+    return 1;
+}
+
+bool InternalNode::handle_verified(int fd, size_t idx) {
+    auto it = clients.find(fd);
+    if (it == clients.end()) return 1;
+    Connection& connection = it->second;
+    if (events[idx].events & EPOLLIN) {
+        if (!connection.recv()) {
+            client_disconnect(fd, it);
+            return 0;
+        }
+    }
+
+    while (auto packet = connection.get_ready_packet()) {
+        if (packet->header.type == engo::PacketType::MESSAGE) {
+        } else if (packet->header.type == engo::PacketType::DISCONNECT) {
+            break;
+        } else if (packet->header.type == engo::PacketType::ERROR) {
+            break;
+        }
+    }
+
+    return 1;
+}
 
 int InternalNode::receive(ServerState& state) {
     sockaddr_in client_addr{};
@@ -178,7 +180,7 @@ int InternalNode::receive(ServerState& state) {
     return client_fd;
 }
 
-void InternalNode::client_disconnect(int& fd) {
+void InternalNode::client_disconnect(int fd) {
     epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, nullptr);
     auto it = clients.find(fd);
     if (it != clients.end()) clients.erase(it);

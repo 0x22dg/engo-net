@@ -40,11 +40,14 @@ class InternalNode {
     bool enabled;
 
    private:
+    bool handle_unverified(int fd, size_t idx);
+    bool handle_verified(int fd, size_t idx);
+
     int  receive(ServerState& state);
-    void client_disconnect(int& fd);
+    void client_disconnect(int fd);
 
     template <typename T>
-    void client_disconnect(int& fd, T it) {
+    void client_disconnect(int fd, T it) {
         epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, nullptr);
         clients.erase(it);
     }
