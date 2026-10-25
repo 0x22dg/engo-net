@@ -18,7 +18,7 @@ class ServerState {
     const std::string& get_addr() const noexcept;
     uint16_t           get_port() const noexcept;
     const char*        get_status_msg() const noexcept;
-    const std::vector<engo::Pair<std::string, uint16_t>>& get_client()
+    const std::vector<engo::Pair<std::string, uint16_t>>& get_clients()
         const noexcept;
 
     void set_addr(const std::string& addr);

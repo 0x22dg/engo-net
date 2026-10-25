@@ -15,7 +15,7 @@ const char* ServerState::get_status_msg() const noexcept {
     return status_msgs[status];
 }
 
-const std::vector<engo::Pair<std::string, uint16_t>>& ServerState::get_client()
+const std::vector<engo::Pair<std::string, uint16_t>>& ServerState::get_clients()
     const noexcept {
     return clients;
 }

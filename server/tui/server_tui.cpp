@@ -49,21 +49,21 @@ void ServerTUI::render() {
     // Server status >>>
     // 1 section: status, addr, port
     buf.put(engo::Pair<size_t, size_t>{x, y++},
-            "state: " + std::string(state.status_msgs[state.status]));
-    buf.put(engo::Pair<size_t, size_t>{x, y++}, "address: " + state.addr);
+            "state: " + std::string(state.get_status_msg()));
+    buf.put(engo::Pair<size_t, size_t>{x, y++}, "address: " + state.get_addr());
     buf.put(engo::Pair<size_t, size_t>{x, y},
-            "port: " + std::to_string(state.port));
+            "port: " + std::to_string(state.get_port()));
     y += 2;
 
     // 2 section: clients, their addrs and ports
     buf.put(engo::Pair<size_t, size_t>{x, y++}, rect_floor, COLOR_DEFAULT,
             COLOR_DEFAULT, STYLE_BOLD);
     buf.put(engo::Pair<size_t, size_t>{x, y++},
-            "clients: " + std::to_string(state.clients.size()));
-    for (size_t i = 0; i < state.clients.size(); i++) {
+            "clients: " + std::to_string(state.get_clients().size()));
+    for (size_t i = 0; i < state.get_clients().size(); i++) {
         buf.put(engo::Pair<size_t, size_t>{x, y++},
-                state.clients[i].x + ":" + std::to_string(state.clients[i].y) +
-                    ": connected");
+                state.get_clients()[i].x + ":" +
+                    std::to_string(state.get_clients()[i].y) + ": connected");
     }
     y++;
     buf.put(engo::Pair<size_t, size_t>{x, y++}, rect_floor, COLOR_DEFAULT,
