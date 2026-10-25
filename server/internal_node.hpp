@@ -8,6 +8,7 @@
 
 #include "../common/logger.hpp"
 #include "../common/network/connection.hpp"
+#include "auth_manager.hpp"
 #include "server_state.hpp"
 #include "tcp_server.hpp"
 
@@ -31,11 +32,10 @@ class InternalNode {
 
     std::unique_ptr<TCP_Server> tcps;
 
+    AuthManager auth_manager;
+
     int                      epoll_fd;
     std::vector<epoll_event> events;
-
-    std::unordered_map<int, Connection> clients;
-    std::unordered_map<int, Connection> unverified_clients;
 
     bool enabled;
 

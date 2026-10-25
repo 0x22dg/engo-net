@@ -40,9 +40,6 @@ InternalNode::InternalNode(const std::string& m_addr, uint16_t port,
 }
 
 InternalNode::~InternalNode() {
-    clients.clear();
-    unverified_clients.clear();
-
     if (epoll_fd >= 0) {
         close(epoll_fd);
     }
@@ -87,8 +84,7 @@ void InternalNode::run() {
                         continue;
                     }
 
-                    unverified_clients.emplace(client_fd,
-                                               Connection(client_fd));
+                    auth_manager.push_unverified(client_fd);
                 }
             } else {
                 int fd = events[i].data.fd;
@@ -109,10 +105,12 @@ void InternalNode::stop() noexcept { enabled = 0; }
 bool InternalNode::is_enabled() const noexcept { return enabled; }
 
 bool InternalNode::handle_unverified(int fd, size_t idx) {
-    auto it = unverified_clients.find(fd);
-    if (it == unverified_clients.end()) return 1;
+    auto opt = auth_manager.find_uv_by_fd(fd);
+    if (!opt) return 1;
 
-    Connection& connection = it->second;
+    AuthManager::UVIterator it = *opt;
+    Connection&             connection = it->second;
+
     if (events[idx].events & EPOLLIN) {
         if (!connection.recv()) {
             client_disconnect(fd, it);
@@ -121,16 +119,23 @@ bool InternalNode::handle_unverified(int fd, size_t idx) {
     }
 
     while (auto packet = connection.get_ready_packet()) {
-        if (packet->header.type == engo::PacketType::AUTH) {
-        } else if (packet->header.type == engo::PacketType::DISCONNECT) {
-            logger.tlog(Logger::INFO, "disconnecting the unverified user");
-            client_disconnect(fd);
-            break;
-        } else if (packet->header.type == engo::PacketType::ERROR) {
-            logger.tlog(Logger::INFO,
-                        "error received from the unverified user");
-            client_disconnect(fd);
-            break;
+        switch (packet->header.type) {
+            case engo::PacketType::AUTH_PROCESS:
+                break;
+            case engo::PacketType::AUTH:
+                break;
+            case engo::PacketType::DISCONNECT:
+                logger.tlog(Logger::INFO, "disconnecting the unverified user");
+                client_disconnect(fd, it);
+                break;
+            case engo::PacketType::ERROR:
+                logger.tlog(Logger::INFO,
+                            "error received from the unverified user");
+                client_disconnect(fd, it);
+                break;
+            default:
+                client_disconnect(fd, it);
+                break;
         }
     }
 
@@ -138,9 +143,12 @@ bool InternalNode::handle_unverified(int fd, size_t idx) {
 }
 
 bool InternalNode::handle_verified(int fd, size_t idx) {
-    auto it = clients.find(fd);
-    if (it == clients.end()) return 1;
-    Connection& connection = it->second;
+    auto opt = auth_manager.find_v_by_fd(fd);
+    if (!opt) return 1;
+
+    AuthManager::VIterator it = *opt;
+
+    Connection& connection = it->second.connection;
     if (events[idx].events & EPOLLIN) {
         if (!connection.recv()) {
             client_disconnect(fd, it);
@@ -149,11 +157,21 @@ bool InternalNode::handle_verified(int fd, size_t idx) {
     }
 
     while (auto packet = connection.get_ready_packet()) {
-        if (packet->header.type == engo::PacketType::MESSAGE) {
-        } else if (packet->header.type == engo::PacketType::DISCONNECT) {
-            break;
-        } else if (packet->header.type == engo::PacketType::ERROR) {
-            break;
+        switch (packet->header.type) {
+            case engo::PacketType::MESSAGE:
+                break;
+            case engo::PacketType::DISCONNECT:
+                logger.tlog(Logger::INFO, "verified user disconnected");
+                client_disconnect(fd, it);
+                break;
+            case engo::PacketType::ERROR:
+                logger.tlog(Logger::INFO,
+                            "error received from the unverfied user");
+                client_disconnect(fd, it);
+                break;
+            default:
+                client_disconnect(fd, it);
+                break;
         }
     }
 
@@ -182,9 +200,7 @@ int InternalNode::receive(ServerState& state) {
 
 void InternalNode::client_disconnect(int fd) {
     epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, nullptr);
-    auto it = clients.find(fd);
-    if (it != clients.end()) clients.erase(it);
 
-    it = unverified_clients.find(fd);
-    if (it != unverified_clients.end()) unverified_clients.erase(fd);
+    auth_manager.delete_unverified(fd);
+    auth_manager.delete_verified(fd);
 }

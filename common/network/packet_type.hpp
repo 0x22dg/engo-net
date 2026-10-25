@@ -3,11 +3,12 @@
 namespace engo {
 
 enum PacketType {
-    AUTH = 1,
-    DISCONNECT = 2,
-    KEY_EXCHANGE = 3,
-    MESSAGE = 4,
-    ERROR = 5
+    AUTH_PROCESS = 1,
+    AUTH = 2,
+    DISCONNECT = 3,
+    KEY_EXCHANGE = 4,
+    MESSAGE = 5,
+    ERROR = 6
 };
 
 };
