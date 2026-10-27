@@ -28,9 +28,6 @@ struct UserMeta {
 
 class UserRegistry {
    public:
-    using URIterator = std::unordered_map<std::string, UserMeta>::iterator;
-
-   public:
     UserRegistry();
     ~UserRegistry();
 
