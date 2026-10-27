@@ -15,6 +15,7 @@ class AuthManager {
     std::array<uint8_t, NONCE_LEN> generate_nonce() const;
 
     void disconnect_uv(int fd);
+    void disconnect_v(int fd);
 
     UserRegistry& get_unverified_rgs() noexcept;
     UserRegistry& get_verified_rgs() noexcept;

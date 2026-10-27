@@ -35,6 +35,8 @@ class UserRegistry {
     void                       erase_temp(int fd);
     std::optional<Connection*> get_temp(int fd);
 
+    bool move_from_temp(int fd, std::vector<uint8_t> pub_key, std::string name);
+
     bool push(const std::string& nickname, UserMeta user_meta);
 
     void erase(int fd);

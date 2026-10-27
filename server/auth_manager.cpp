@@ -23,6 +23,13 @@ void AuthManager::disconnect_uv(int fd) {
     unverified_users.erase(fd);
 }
 
+void AuthManager::disconnect_v(int fd) {
+    if (fd < 0) return;
+
+    verified_users.erase_temp(fd);
+    verified_users.erase(fd);
+}
+
 UserRegistry& AuthManager::get_unverified_rgs() noexcept {
     return unverified_users;
 }

@@ -20,7 +20,7 @@ bool UserRegistry::push_temp(int fd) {
 }
 
 void UserRegistry::erase_temp(int fd) {
-    if (fd < 0) return;
+    if (temp_buf.empty() || fd < 0) return;
 
     auto it = temp_buf.find(fd);
     if (it == temp_buf.end()) return;
@@ -35,6 +35,20 @@ std::optional<Connection*> UserRegistry::get_temp(int fd) {
     if (it == temp_buf.end()) return std::nullopt;
 
     return &it->second;
+}
+
+bool UserRegistry::move_from_temp(int fd, std::vector<uint8_t> pub_key,
+                                  std::string name) {
+    if (fd < 0 || pub_key.empty() || pub_key.size() != 32 || name.empty())
+        return 0;
+
+    auto it = temp_buf.find(fd);
+    if (it == temp_buf.end()) return 0;
+
+    UserMeta meta = {std::move(name), fd, std::move(pub_key),
+                     std::make_unique<Connection>(std::move(it->second))};
+
+    return push(meta.nickname, std::move(meta));
 }
 
 bool UserRegistry::push(const std::string& nickname, UserMeta user_meta) {
