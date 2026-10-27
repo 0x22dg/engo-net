@@ -10,6 +10,7 @@ InternalNode::InternalNode(const std::string& m_addr, uint16_t port,
     : tcps(std::make_unique<TCP_Server>(m_addr, port, logger)),
       state(state),
       logger(logger),
+      auth_manager(logger),
       epoll_fd(-1),
       events(),
       enabled(1) {
@@ -123,18 +124,9 @@ bool InternalNode::handle_unverified(int fd, size_t idx) {
 
     while (auto packet = connection->get_ready_packet()) {
         switch (packet->header.type) {
-            case engo::PacketType::HELLO: {
-                std::vector<uint8_t> pub_key(packet->data.begin(),
-                                             packet->data.begin() + 32);
-                std::string name(packet->data.begin() + 32, packet->data.end());
-                if (!auth_manager.get_unverified_rgs().move_from_temp(
-                        fd, std::move(pub_key), std::move(name))) {
-                    logger.tlog(
-                        Logger::ERROR,
-                        "failed to move user from temp buffer in auth manager");
-                    break;
-                }
-            } break;
+            case engo::PacketType::HELLO:
+                auth_manager.handle_hello_packet(fd, *packet);
+                break;
             case engo::PacketType::AUTH_PROCESS:
                 break;
             case engo::PacketType::AUTH:
@@ -189,6 +181,8 @@ bool InternalNode::handle_verified(int fd, size_t idx) {
 
     return 1;
 }
+
+void handle_hello_packet(const engo::Packet& packet);
 
 int InternalNode::receive(ServerState& state) {
     sockaddr_in client_addr{};
