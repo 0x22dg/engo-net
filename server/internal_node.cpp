@@ -84,12 +84,14 @@ void InternalNode::run() {
                         continue;
                     }
 
-                    auth_manager.push_unverified(client_fd);
+                    auth_manager.get_unverified_rgs().push_temp(client_fd);
                 }
             } else {
                 int fd = events[i].data.fd;
                 if (events[i].events & (EPOLLERR | EPOLLHUP | EPOLLRDHUP)) {
-                    client_disconnect(fd);
+                    epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, nullptr);
+                    auth_manager.disconnect_uv(fd);
+                    auth_manager.disconnect_v(fd);
                     continue;
                 }
 
@@ -105,20 +107,19 @@ void InternalNode::stop() noexcept { enabled = 0; }
 bool InternalNode::is_enabled() const noexcept { return enabled; }
 
 bool InternalNode::handle_unverified(int fd, size_t idx) {
-    auto opt = auth_manager.find_uv_by_fd(fd);
+    auto opt = auth_manager.get_unverified_rgs().get_temp(fd);
     if (!opt) return 1;
 
-    AuthManager::UVIterator it = *opt;
-    Connection&             connection = it->second;
+    Connection* connection = *opt;
 
     if (events[idx].events & EPOLLIN) {
-        if (!connection.recv()) {
-            client_disconnect(fd, it);
+        if (!connection->recv()) {
+            disconnect_temp(fd);
             return 0;
         }
     }
 
-    while (auto packet = connection.get_ready_packet()) {
+    while (auto packet = connection->get_ready_packet()) {
         switch (packet->header.type) {
             case engo::PacketType::AUTH_PROCESS:
                 break;
@@ -126,15 +127,15 @@ bool InternalNode::handle_unverified(int fd, size_t idx) {
                 break;
             case engo::PacketType::DISCONNECT:
                 logger.tlog(Logger::INFO, "disconnecting the unverified user");
-                client_disconnect(fd, it);
+                disconnect_temp(fd);
                 break;
             case engo::PacketType::ERROR:
                 logger.tlog(Logger::INFO,
                             "error received from the unverified user");
-                client_disconnect(fd, it);
+                disconnect_temp(fd);
                 break;
             default:
-                client_disconnect(fd, it);
+                disconnect_temp(fd);
                 break;
         }
     }
@@ -143,34 +144,31 @@ bool InternalNode::handle_unverified(int fd, size_t idx) {
 }
 
 bool InternalNode::handle_verified(int fd, size_t idx) {
-    auto opt = auth_manager.find_v_by_fd(fd);
-    if (!opt) return 1;
+    UserMeta* meta = auth_manager.get_verified_rgs().find(fd);
 
-    AuthManager::VIterator it = *opt;
-
-    Connection& connection = it->second.connection;
+    Connection* connection = meta->connection.get();
     if (events[idx].events & EPOLLIN) {
-        if (!connection.recv()) {
-            client_disconnect(fd, it);
+        if (!connection->recv()) {
+            disconnect_v(fd);
             return 0;
         }
     }
 
-    while (auto packet = connection.get_ready_packet()) {
+    while (auto packet = connection->get_ready_packet()) {
         switch (packet->header.type) {
             case engo::PacketType::MESSAGE:
                 break;
             case engo::PacketType::DISCONNECT:
                 logger.tlog(Logger::INFO, "verified user disconnected");
-                client_disconnect(fd, it);
+                disconnect_v(fd);
                 break;
             case engo::PacketType::ERROR:
                 logger.tlog(Logger::INFO,
                             "error received from the unverfied user");
-                client_disconnect(fd, it);
+                disconnect_v(fd);
                 break;
             default:
-                client_disconnect(fd, it);
+                disconnect_v(fd);
                 break;
         }
     }
@@ -198,9 +196,12 @@ int InternalNode::receive(ServerState& state) {
     return client_fd;
 }
 
-void InternalNode::client_disconnect(int fd) {
+void InternalNode::disconnect_temp(int fd) {
     epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, nullptr);
+    auth_manager.get_unverified_rgs().erase_temp(fd);
+}
 
-    auth_manager.delete_unverified(fd);
-    auth_manager.delete_verified(fd);
+void InternalNode::disconnect_v(int fd) {
+    epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, nullptr);
+    auth_manager.get_verified_rgs().erase(fd);
 }

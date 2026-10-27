@@ -44,11 +44,6 @@ class InternalNode {
     bool handle_verified(int fd, size_t idx);
 
     int  receive(ServerState& state);
-    void client_disconnect(int fd);
-
-    template <typename T>
-    void client_disconnect(int fd, T it) {
-        epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, nullptr);
-        clients.erase(it);
-    }
+    void disconnect_temp(int fd);
+    void disconnect_v(int fd);
 };
