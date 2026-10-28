@@ -2,9 +2,11 @@
 
 #include <iostream>
 
-User::User(const std::string& addr, uint16_t port, MessageCallback msg_callback,
-           Logger& logger)
-    : logger(logger),
+User::User(Identity& identity, const std::string& addr, uint16_t port,
+           MessageCallback msg_callback, Logger& logger)
+    : identity(identity),
+      logger(logger),
+      auth_service(logger),
       tcpc(addr, port, logger),
       enabled(1),
       msg_callback(std::move(msg_callback)) {
@@ -22,6 +24,8 @@ User::User(const std::string& addr, uint16_t port, MessageCallback msg_callback,
 }
 
 void User::run() {
+    if (!auth_service.send_hello(*connection, identity)) stop();
+
     while (enabled) {
         if (!connection->recv()) {
             enabled = 0;
@@ -36,6 +40,24 @@ void User::run() {
                 packet->header.type == engo::PacketType::MESSAGE) {
                 msg_callback(
                     std::string(packet->data.begin(), packet->data.end()));
+            }
+
+            switch (packet->header.type) {
+                case engo::PacketType::AUTH_PROCESS:
+                    auth_service.handle_server_nonce(*connection, *packet,
+                                                     identity);
+                    break;
+                case engo::PacketType::AUTH:
+                    break;
+                case engo::PacketType::DISCONNECT:
+                    logger.tlog(Logger::INFO, "received the disconnect packet");
+                    stop();
+                    break;
+                case engo::PacketType::ERROR:
+                    logger.tlog(Logger::INFO, "error received from the server");
+                    break;
+                default:
+                    break;
             }
         }
     }

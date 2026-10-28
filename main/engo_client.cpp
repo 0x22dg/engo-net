@@ -94,7 +94,7 @@ void EngoClient::execute_cmd(const std::string& input) {
             if (!user) {
                 try {
                     user = std::make_unique<User>(
-                        cmd.args[0],
+                        *identity, cmd.args[0],
                         static_cast<uint16_t>(std::stoul(cmd.args[1])),
                         [this](const std::string& msg) {
                             tui.handle_network_msgs(msg);
