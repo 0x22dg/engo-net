@@ -34,7 +34,7 @@ Socket& Socket::operator=(Socket&& other) noexcept {
 
 bool Socket::make_non_blocking() {
     int flags = fcntl(m_socket, F_GETFL, 0);
-    if (flags == -1) return 0;
+    if (flags == -1) return false;
 
     return fcntl(m_socket, F_SETFL, flags | O_NONBLOCK) == 0;
 }

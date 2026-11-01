@@ -3,12 +3,11 @@
 #include <sys/epoll.h>
 
 #include <memory>
-#include <unordered_map>
 #include <vector>
 
 #include "../common/logger.hpp"
-#include "../common/network/connection.hpp"
 #include "auth_manager.hpp"
+#include "data_manager.hpp"
 #include "server_state.hpp"
 #include "tcp_server.hpp"
 
@@ -33,6 +32,7 @@ class InternalNode {
     std::unique_ptr<TCP_Server> tcps;
 
     AuthManager auth_manager;
+    DataManager data_manager;
 
     int                      epoll_fd;
     std::vector<epoll_event> events;

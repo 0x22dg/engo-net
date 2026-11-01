@@ -11,6 +11,7 @@ InternalNode::InternalNode(const std::string& m_addr, uint16_t port,
       state(state),
       logger(logger),
       auth_manager(logger),
+      data_manager(),
       epoll_fd(-1),
       events(),
       enabled(1) {
@@ -55,7 +56,7 @@ void InternalNode::run() {
         int num_events =
             epoll_wait(epoll_fd, events.data(), MAX_EVENTS, EPOLL_TIMEOUT);
         if (num_events == -1) {
-            enabled = 0;
+            enabled = false;
             logger.log(Logger::ERROR,
                        "failed to wait for events in the internal node");
             break;
@@ -111,14 +112,15 @@ bool InternalNode::is_enabled() const noexcept { return enabled; }
 
 bool InternalNode::handle_unverified(int fd, size_t idx) {
     auto opt = auth_manager.get_unverified_rgs().get_temp(fd);
-    if (!opt) return 1;
+    if (!opt) return true;
 
     Connection* connection = *opt;
 
     if (events[idx].events & EPOLLIN) {
         if (!connection->recv()) {
             disconnect_temp(fd);
-            return 0;
+            return false;
+            ;
         }
     }
 
@@ -127,19 +129,36 @@ bool InternalNode::handle_unverified(int fd, size_t idx) {
             case engo::PacketType::HELLO:
                 auth_manager.handle_hello_packet(fd, *packet);
                 break;
-            case engo::PacketType::AUTH_PROCESS:
+            case engo::PacketType::AUTH_PROCESS: {
                 if (!auth_manager.handle_signature(fd, *packet)) {
                     disconnect_uv(fd);
                     break;
                 }
 
-                if (!auth_manager.accept_user(fd)) {
+                auto meta = auth_manager.get_unverified_rgs().find(fd);
+
+                const std::string& nickname = meta->nickname;
+                if (data_manager.contain_nickname(nickname)) {
+                    Connection& connection = *meta->connection;
+                    connection.send({engo::PacketType::AUTH_ERROR,
+                                     "failed to auth: your nickname is busy"});
+                    disconnect_uv(fd);
+                    break;
+                }
+
+                if (!auth_manager.accept_user(fd, data_manager.get_db())) {
                     logger.tlog(Logger::ERROR, "failed to accept the user");
                     break;
                 }
+
+                meta = auth_manager.get_verified_rgs().find(fd);
+                if (!data_manager.add_user(meta->nickname, meta->pub_key)) {
+                    disconnect_v(fd);
+                    break;
+                }
+
                 break;
-            case engo::PacketType::AUTH:
-                break;
+            }
             case engo::PacketType::DISCONNECT:
                 logger.tlog(Logger::INFO, "disconnecting the unverified user");
                 // TODO correct handling of unverified and unverified + temp
@@ -156,7 +175,7 @@ bool InternalNode::handle_unverified(int fd, size_t idx) {
         }
     }
 
-    return 1;
+    return true;
 }
 
 bool InternalNode::handle_verified(int fd, size_t idx) {
@@ -166,7 +185,7 @@ bool InternalNode::handle_verified(int fd, size_t idx) {
     if (events[idx].events & EPOLLIN) {
         if (!connection->recv()) {
             disconnect_v(fd);
-            return 0;
+            return false;
         }
     }
 
@@ -189,7 +208,7 @@ bool InternalNode::handle_verified(int fd, size_t idx) {
         }
     }
 
-    return 1;
+    return true;
 }
 
 void handle_hello_packet(const engo::Packet& packet);

@@ -95,7 +95,7 @@ void Buffer::putv(engo::Pair<size_t, size_t> v, std::string_view text, i32 tg,
 }
 
 bool Buffer::utf8_decode(std::string_view str, size_t& offset, c32& c) const {
-    if (offset >= str.size()) return 0;
+    if (offset >= str.size()) return false;
 
     const auto byte = [&](size_t index) -> u8 {
         return static_cast<u8>(str[index]);
@@ -105,22 +105,22 @@ bool Buffer::utf8_decode(std::string_view str, size_t& offset, c32& c) const {
     if (b0 <= 0x7F) {
         c = b0;
         offset += 1;
-        return 1;
+        return true;
     }
 
     if ((b0 & 0xE0) == 0xC0) {
-        if (offset + 1 >= str.size()) return 0;
+        if (offset + 1 >= str.size()) return false;
         u8 b1 = byte(offset + 1);
 
-        if ((b1 & 0xC0) != 0x80) return 0;
+        if ((b1 & 0xC0) != 0x80) return false;
         c = ((b0 & 0x1F) << 6) | (b1 & 0x3F);
 
         offset += 2;
-        return 1;
+        return true;
     }
 
     if ((b0 & 0xF0) == 0xE0) {
-        if (offset + 2 >= str.size()) return 0;
+        if (offset + 2 >= str.size()) return false;
         u8 b1 = byte(offset + 1);
         u8 b2 = byte(offset + 2);
 
@@ -128,28 +128,28 @@ bool Buffer::utf8_decode(std::string_view str, size_t& offset, c32& c) const {
         c = ((b0 & 0x0F) << 12) | ((b1 & 0x3F) << 6) | (b2 & 0x3F);
 
         offset += 3;
-        return 1;
+        return true;
     }
 
     if ((b0 & 0xF8) == 0xF0) {
-        if (offset + 3 >= str.size()) return 0;
+        if (offset + 3 >= str.size()) return false;
 
         u8 b1 = byte(offset + 1);
         u8 b2 = byte(offset + 2);
         u8 b3 = byte(offset + 3);
 
         if ((b1 & 0xC0) != 0x80 || (b2 & 0xC0) != 0x80 || (b3 & 0xC0) != 0x80) {
-            return 0;
+            return false;
         }
 
         c = ((b0 & 0x07) << 18) | ((b1 & 0x3F) << 12) | ((b2 & 0x3F) << 6) |
             (b3 & 0x3F);
 
         offset += 4;
-        return 1;
+        return true;
     }
 
-    return 0;
+    return false;
 }
 
 void Buffer::utf8_encode(c32 c, std::string& output) const {

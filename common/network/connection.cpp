@@ -12,14 +12,14 @@ Connection::Connection(int m_socket) : m_socket(m_socket), closed(0) {
 
 Connection::~Connection() { close(); }
 
-void Connection::close() noexcept { closed = 1; }
+void Connection::close() noexcept { closed = true; }
 
 Connection::Connection(Connection&& other) noexcept
     : m_socket(std::move(other.m_socket)),
       recv_buf(std::move(other.recv_buf)),
       closed(other.closed) {
     other.m_socket = -1;
-    other.closed = 1;
+    other.closed = true;
 }
 
 Connection& Connection::operator=(Connection&& other) noexcept {
@@ -60,13 +60,13 @@ bool Connection::send(const engo::Packet& packet) {
 
         if (val < 0) {
             if (errno == EAGAIN || errno == EWOULDBLOCK) continue;
-            return 0;
+            return false;
         }
 
         sent += val;
     }
 
-    return 1;
+    return true;
 }
 
 bool Connection::recv() {
@@ -81,14 +81,14 @@ bool Connection::recv() {
 
         if (val == 0) {
             close();
-            return 0;
+            return false;
         }
 
         if (errno == EINTR) continue;
-        if (errno == EAGAIN || errno == EWOULDBLOCK) return 1;
+        if (errno == EAGAIN || errno == EWOULDBLOCK) return true;
 
         close();
-        return 0;
+        return false;
     }
 }
 

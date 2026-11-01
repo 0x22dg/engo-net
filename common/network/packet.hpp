@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
 #include <vector>
 
 #include "packet_type.hpp"
@@ -14,6 +15,7 @@ struct PacketHeader {
 
 struct Packet {
     Packet(PacketType type, std::vector<uint8_t> payload);
+    Packet(PacketType type, const std::string& payload);
     Packet();
 
     PacketHeader         header;

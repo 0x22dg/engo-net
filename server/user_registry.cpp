@@ -13,10 +13,10 @@ UserRegistry::~UserRegistry() {
 }
 
 bool UserRegistry::push_temp(int fd) {
-    if (fd < 0) return 0;
+    if (fd < 0) return false;
 
     temp_buf.emplace(fd, Connection(fd));
-    return 1;
+    return true;
 }
 
 void UserRegistry::erase_temp(int fd) {
@@ -40,10 +40,10 @@ std::optional<Connection*> UserRegistry::get_temp(int fd) {
 bool UserRegistry::move_from_temp(int fd, std::vector<uint8_t> pub_key,
                                   std::string name) {
     if (fd < 0 || pub_key.empty() || pub_key.size() != 32 || name.empty())
-        return 0;
+        return false;
 
     auto it = temp_buf.find(fd);
-    if (it == temp_buf.end()) return 0;
+    if (it == temp_buf.end()) return false;
 
     UserMeta meta = {std::move(name), fd, std::move(pub_key),
                      std::make_unique<Connection>(std::move(it->second))};
@@ -52,7 +52,7 @@ bool UserRegistry::move_from_temp(int fd, std::vector<uint8_t> pub_key,
 }
 
 bool UserRegistry::push(UserMeta user_meta) {
-    if (user_meta.is_empty()) return 0;
+    if (user_meta.is_empty()) return false;
 
     auto [it, inserted] =
         src_by_name.try_emplace(user_meta.nickname, std::move(user_meta));
@@ -61,7 +61,7 @@ bool UserRegistry::push(UserMeta user_meta) {
     src_by_fd.emplace(user_meta.fd, ptr);
     src_by_key.emplace(user_meta.pub_key, ptr);
 
-    return 1;
+    return true;
 }
 
 void UserRegistry::erase(int fd) {
@@ -112,7 +112,7 @@ std::optional<UserMeta> UserRegistry::pop(int fd) {
 }
 
 UserMeta* UserRegistry::find(int fd) {
-    if (fd < 0) return 0;
+    if (fd < 0) return nullptr;
 
     auto it = src_by_fd.find(fd);
     if (it == src_by_fd.end()) return nullptr;

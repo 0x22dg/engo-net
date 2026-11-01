@@ -26,16 +26,16 @@ Database::~Database() {
 }
 
 bool Database::execute(const std::string& query) {
-    if (query.empty()) return 0;
+    if (query.empty()) return false;
 
     char* err_msg = NULL;
     int   rc = sqlite3_exec(src, query.c_str(), 0, 0, &err_msg);
     if (rc != SQLITE_OK) {
         sqlite3_free(err_msg);
-        return 0;
+        return false;
     }
 
-    return 1;
+    return true;
 }
 
 std::unique_ptr<DB_stmt> Database::prepare(const std::string& query) {

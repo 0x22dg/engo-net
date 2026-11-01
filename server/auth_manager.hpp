@@ -3,6 +3,7 @@
 #include <array>
 #include <cstdint>
 
+#include "../common/data/database.hpp"
 #include "../common/logger.hpp"
 #include "../common/network/packet.hpp"
 #include "user_registry.hpp"
@@ -16,7 +17,7 @@ class AuthManager {
 
     void handle_hello_packet(int fd, const engo::Packet& packet);
     bool handle_signature(int fd, const engo::Packet& packet);
-    bool accept_user(int fd);
+    bool accept_user(int fd, Database& db);
 
     void disconnect_uv(int fd);
     void disconnect_v(int fd);

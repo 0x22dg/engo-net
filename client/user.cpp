@@ -47,8 +47,6 @@ void User::run() {
                     auth_service.handle_server_nonce(*connection, *packet,
                                                      identity);
                     break;
-                case engo::PacketType::AUTH:
-                    break;
                 case engo::PacketType::DISCONNECT:
                     logger.tlog(Logger::INFO, "received the disconnect packet");
                     stop();

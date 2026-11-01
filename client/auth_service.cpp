@@ -11,10 +11,10 @@ bool AuthService::send_hello(Connection& connection, const Identity& identity) {
     if (!connection.send({engo::PacketType::HELLO, data})) {
         logger.log(Logger::ERROR,
                    "failed to send the hello packet to the fucking server");
-        return 0;
+        return false;
     }
 
-    return 1;
+    return true;
 }
 
 void AuthService::handle_server_nonce(Connection&         connection,

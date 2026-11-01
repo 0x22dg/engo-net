@@ -15,7 +15,7 @@ Command CommandParser::parse(const std::string& input) {
     std::istringstream ss(input);
     std::string        arg;
 
-    bool b = 0;
+    bool b = false;
     while (ss >> arg) {
         if (!b) {
             res.type = convert_type(arg);

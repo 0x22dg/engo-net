@@ -46,7 +46,7 @@ bool AuthManager::handle_signature(int fd, const engo::Packet& packet) {
     auto it = nonce_buf.find(fd);
     if (it == nonce_buf.end()) {
         logger.log(Logger::ERROR, "nonce is not found for this client");
-        return 0;
+        return false;
     }
 
     int rc = ED25519::verify(pub_key, {it->second.begin(), it->second.end()},
@@ -55,12 +55,10 @@ bool AuthManager::handle_signature(int fd, const engo::Packet& packet) {
         logger.log(Logger::ERROR,
                    "failed to verify user signature: wrong signature");
 
-        std::string err_msg = "your crypto signature is wrong, auth failed";
-
         auto        meta = unverified_users.find(fd);
         Connection& connection = *meta->connection;
-        connection.send(
-            {engo::PacketType::AUTH_ERROR, {err_msg.begin(), err_msg.end()}});
+        connection.send({engo::PacketType::AUTH_ERROR,
+                         "your crypto signature is wrong, auth failed"});
     }
 
     nonce_buf.erase(it);
@@ -68,11 +66,14 @@ bool AuthManager::handle_signature(int fd, const engo::Packet& packet) {
     return rc;
 }
 
-bool AuthManager::accept_user(int fd) {
+bool AuthManager::accept_user(int fd, Database& db) {
     auto opt = unverified_users.pop(fd);
-    if (!opt) return 0;
+    if (!opt) return false;
 
-    return verified_users.push(std::move(*opt));
+    int rc = verified_users.push(std::move(*opt));
+    if (!rc) return rc;
+
+    return rc;
 }
 
 void AuthManager::disconnect_uv(int fd) {

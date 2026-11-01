@@ -30,7 +30,7 @@ const std::vector<uint8_t>& Key::get_priv() const noexcept { return priv; }
 bool Key::save_key_file(const std::string&          path,
                         const std::vector<uint8_t>& v) const {
     std::ofstream file(path, std::ios::out | std::ios::binary);
-    if (!file.is_open()) return 0;
+    if (!file.is_open()) return false;
 
     file.write(reinterpret_cast<const char*>(v.data()), v.size());
     return file.good();
@@ -38,7 +38,7 @@ bool Key::save_key_file(const std::string&          path,
 
 bool Key::load_key_file(const std::string& path, std::vector<uint8_t>& v) {
     std::ifstream file(path, std::ios::binary | std::ios::ate);
-    if (!file.is_open()) return 0;
+    if (!file.is_open()) return false;
 
     std::streamsize size = file.tellg();
     file.seekg(0, std::ios::beg);
@@ -46,5 +46,5 @@ bool Key::load_key_file(const std::string& path, std::vector<uint8_t>& v) {
     std::vector<char> buf(size);
     file.read(buf.data(), size);
     std::copy(buf.begin(), buf.end(), v.data());
-    return 1;
+    return true;
 }
