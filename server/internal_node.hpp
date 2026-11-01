@@ -45,5 +45,6 @@ class InternalNode {
 
     int  receive(ServerState& state);
     void disconnect_temp(int fd);
+    void disconnect_uv(int fd);
     void disconnect_v(int fd);
 };

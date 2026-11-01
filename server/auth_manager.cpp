@@ -2,6 +2,8 @@
 
 #include <openssl/rand.h>
 
+#include "../common/crypto/ed25519.hpp"
+
 AuthManager::AuthManager(Logger& logger) : logger(logger) {}
 
 AuthManager::~AuthManager() {}
@@ -17,8 +19,8 @@ void AuthManager::handle_hello_packet(int fd, const engo::Packet& packet) {
         return;
     }
 
-    auto        it = unverified_users.find(fd);
-    Connection& connection = *it->connection;
+    auto        meta = unverified_users.find(fd);
+    Connection& connection = *meta->connection;
 
     std::array<uint8_t, NONCE_LEN> nonce;
     try {
@@ -35,6 +37,42 @@ void AuthManager::handle_hello_packet(int fd, const engo::Packet& packet) {
     }
 
     nonce_buf.emplace(fd, nonce);
+}
+
+bool AuthManager::handle_signature(int fd, const engo::Packet& packet) {
+    auto                  meta = unverified_users.find(fd);
+    std::vector<uint8_t>& pub_key = meta->pub_key;
+
+    auto it = nonce_buf.find(fd);
+    if (it == nonce_buf.end()) {
+        logger.log(Logger::ERROR, "nonce is not found for this client");
+        return 0;
+    }
+
+    int rc = ED25519::verify(pub_key, {it->second.begin(), it->second.end()},
+                             {packet.data.begin(), packet.data.end()});
+    if (!rc) {
+        logger.log(Logger::ERROR,
+                   "failed to verify user signature: wrong signature");
+
+        std::string err_msg = "your crypto signature is wrong, auth failed";
+
+        auto        meta = unverified_users.find(fd);
+        Connection& connection = *meta->connection;
+        connection.send(
+            {engo::PacketType::AUTH_ERROR, {err_msg.begin(), err_msg.end()}});
+    }
+
+    nonce_buf.erase(it);
+
+    return rc;
+}
+
+bool AuthManager::accept_user(int fd) {
+    auto opt = unverified_users.pop(fd);
+    if (!opt) return 0;
+
+    return verified_users.push(std::move(*opt));
 }
 
 void AuthManager::disconnect_uv(int fd) {

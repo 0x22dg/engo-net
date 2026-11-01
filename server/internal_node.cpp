@@ -128,11 +128,21 @@ bool InternalNode::handle_unverified(int fd, size_t idx) {
                 auth_manager.handle_hello_packet(fd, *packet);
                 break;
             case engo::PacketType::AUTH_PROCESS:
+                if (!auth_manager.handle_signature(fd, *packet)) {
+                    disconnect_uv(fd);
+                    break;
+                }
+
+                if (!auth_manager.accept_user(fd)) {
+                    logger.tlog(Logger::ERROR, "failed to accept the user");
+                    break;
+                }
                 break;
             case engo::PacketType::AUTH:
                 break;
             case engo::PacketType::DISCONNECT:
                 logger.tlog(Logger::INFO, "disconnecting the unverified user");
+                // TODO correct handling of unverified and unverified + temp
                 disconnect_temp(fd);
                 break;
             case engo::PacketType::ERROR:
@@ -207,6 +217,11 @@ int InternalNode::receive(ServerState& state) {
 void InternalNode::disconnect_temp(int fd) {
     epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, nullptr);
     auth_manager.get_unverified_rgs().erase_temp(fd);
+}
+
+void InternalNode::disconnect_uv(int fd) {
+    epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, nullptr);
+    auth_manager.get_unverified_rgs().erase(fd);
 }
 
 void InternalNode::disconnect_v(int fd) {

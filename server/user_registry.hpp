@@ -37,11 +37,13 @@ class UserRegistry {
 
     bool move_from_temp(int fd, std::vector<uint8_t> pub_key, std::string name);
 
-    bool push(const std::string& nickname, UserMeta user_meta);
+    bool push(UserMeta user_meta);
 
     void erase(int fd);
     void erase(const std::string& nickname);
     void erase(const std::vector<uint8_t>& key);
+
+    std::optional<UserMeta> pop(int fd);
 
     UserMeta* find(int fd);
     UserMeta* find(const std::string& nickname);

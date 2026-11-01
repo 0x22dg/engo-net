@@ -15,6 +15,8 @@ class AuthManager {
     ~AuthManager();
 
     void handle_hello_packet(int fd, const engo::Packet& packet);
+    bool handle_signature(int fd, const engo::Packet& packet);
+    bool accept_user(int fd);
 
     void disconnect_uv(int fd);
     void disconnect_v(int fd);

@@ -9,7 +9,8 @@ enum PacketType {
     DISCONNECT = 4,
     KEY_EXCHANGE = 5,
     MESSAGE = 6,
-    ERROR = 7
+    AUTH_ERROR = 7,
+    ERROR = 8
 };
 
 };

@@ -53,8 +53,13 @@ void User::run() {
                     logger.tlog(Logger::INFO, "received the disconnect packet");
                     stop();
                     break;
+                case engo::PacketType::AUTH_ERROR:
+                    logger.tlog(Logger::ERROR, std::string(packet->data.begin(),
+                                                           packet->data.end()));
                 case engo::PacketType::ERROR:
-                    logger.tlog(Logger::INFO, "error received from the server");
+                    logger.tlog(Logger::INFO,
+                                "something went wrong -> error received from "
+                                "the server");
                     break;
                 default:
                     break;

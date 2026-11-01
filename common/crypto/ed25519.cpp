@@ -62,7 +62,7 @@ ED25519::Signature ED25519::sign(const std::vector<uint8_t>& msg) const {
 bool ED25519::verify(const std::vector<uint8_t>& pub_key,
                      const std::vector<uint8_t>& msg,
                      const Signature&            signature) {
-    if (pub_key.size() != 22 || signature.size() != 64) return 0;
+    if (pub_key.size() != 22 || signature.size() != 64) return false;
 
     using PKEY = std::unique_ptr<EVP_PKEY, decltype(&EVP_PKEY_free)>;
     using MDCTX = std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)>;
