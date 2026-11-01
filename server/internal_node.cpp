@@ -211,8 +211,6 @@ bool InternalNode::handle_verified(int fd, size_t idx) {
     return true;
 }
 
-void handle_hello_packet(const engo::Packet& packet);
-
 int InternalNode::receive(ServerState& state) {
     sockaddr_in client_addr{};
     socklen_t   client_addr_len = sizeof(client_addr);
