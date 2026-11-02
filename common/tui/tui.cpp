@@ -15,7 +15,8 @@ void TUI::run() {}
 
 void TUI::add_log(const std::string& type, const std::string& message) {
     std::lock_guard lock(log_mutex);
-    log_queue.push(type + " -> " + message);
+    std::string     msg = type.empty() ? message : type + " -> " + message;
+    log_queue.push(msg);
 }
 
 const std::string& TUI::get_sep() const noexcept { return sep; }

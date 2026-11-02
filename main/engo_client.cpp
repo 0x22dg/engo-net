@@ -2,6 +2,21 @@
 
 #include <iostream>
 
+namespace {
+std::string to_hex(const std::vector<uint8_t>& v) {
+    constexpr char hex[] = "0123456789abcdef";
+    std::string    res;
+    res.reserve(v.size() * 2);
+
+    for (uint8_t byte : v) {
+        res += hex[byte >> 4];
+        res += hex[byte & 0x0F];
+    }
+
+    return res;
+}
+};  // namespace
+
 EngoClient::EngoClient(size_t wcols, size_t wrows)
     : EngoNet(),
       tui(
@@ -117,18 +132,12 @@ void EngoClient::execute_cmd(const std::string& input) {
 
             break;
         case CommandType::PROFILE:
-            tui.add_log("engo-net", "your profile: ");
-            tui.add_log("engo-net", " - nickname: " + identity->get_nickname());
-            tui.add_log(
-                "engo-net",
-                " - ed25519key: " +
-                    std::string(identity->get_ed25519().get_pub().begin(),
-                                identity->get_ed25519().get_pub().end()));
-            tui.add_log(
-                "engo-net",
-                " - x25519key: " +
-                    std::string(identity->get_x25519().get_pub().begin(),
-                                identity->get_x25519().get_pub().end()));
+            tui.add_log("", "your profile: ");
+            tui.add_log("", " - nickname: " + identity->get_nickname());
+            tui.add_log("", " - ed25519 public key: " +
+                                to_hex(identity->get_ed25519().get_pub()));
+            tui.add_log("", " - x25519 public key: " +
+                                to_hex(identity->get_ed25519().get_pub()));
             break;
         case CommandType::UNKNOWN:
             get_logger().tlog(Logger::ERROR, "unknown command");
