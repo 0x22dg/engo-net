@@ -11,7 +11,7 @@ InternalNode::InternalNode(const std::string& m_addr, uint16_t port,
       state(state),
       logger(logger),
       auth_manager(logger),
-      data_manager(),
+      data_manager(logger),
       epoll_fd(-1),
       events(),
       enabled(1) {

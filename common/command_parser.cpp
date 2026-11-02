@@ -34,7 +34,7 @@ Command CommandParser::parse(const std::string& input) {
 CommandType CommandParser::convert_type(const std::string& cmd) const {
     static std::unordered_map<std::string, CommandType> map = {
         {"exit", EXIT}, {"help", HELP},       {"start", START},
-        {"stop", STOP}, {"connect", CONNECT}, {"echo-send", ECHO_SEND}};
+        {"stop", STOP}, {"connect", CONNECT}, {"profile", PROFILE}};
 
     auto it = map.find(cmd);
     if (it != map.end()) {

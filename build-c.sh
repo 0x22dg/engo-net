@@ -9,4 +9,4 @@ cd build
 cmake ..
 cmake --build .
 
-./engo-net client
+./main/engo-net client

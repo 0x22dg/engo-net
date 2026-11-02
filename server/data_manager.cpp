@@ -1,5 +1,3 @@
-#pragma once
-
 #include "data_manager.hpp"
 
 DataManager::DataManager(Logger& logger) : logger(logger) {

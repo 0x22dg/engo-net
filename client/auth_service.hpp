@@ -4,7 +4,7 @@
 #include "../common/network/connection.hpp"
 #include "identity.hpp"
 
-constexpr uint8_t NONCE_LEN = 32;
+constexpr uint8_t NONCE_LENGTH = 32;
 
 class AuthService {
    public:

@@ -20,7 +20,7 @@ bool AuthService::send_hello(Connection& connection, const Identity& identity) {
 void AuthService::handle_server_nonce(Connection&         connection,
                                       const engo::Packet& packet,
                                       const Identity&     identity) {
-    if (packet.data.size() != NONCE_LEN) {
+    if (packet.data.size() != NONCE_LENGTH) {
         logger.log(
             Logger::ERROR,
             "failed to receive the nonce packet, because packet size is not a "

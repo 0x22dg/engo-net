@@ -116,8 +116,19 @@ void EngoClient::execute_cmd(const std::string& input) {
             }
 
             break;
-        case CommandType::ECHO_SEND:
-            user->send(cmd.args, 0);
+        case CommandType::PROFILE:
+            tui.add_log("engo-net", "your profile: ");
+            tui.add_log("engo-net", " - nickname: " + identity->get_nickname());
+            tui.add_log(
+                "engo-net",
+                " - ed25519key: " +
+                    std::string(identity->get_ed25519().get_pub().begin(),
+                                identity->get_ed25519().get_pub().end()));
+            tui.add_log(
+                "engo-net",
+                " - x25519key: " +
+                    std::string(identity->get_x25519().get_pub().begin(),
+                                identity->get_x25519().get_pub().end()));
             break;
         case CommandType::UNKNOWN:
             get_logger().tlog(Logger::ERROR, "unknown command");

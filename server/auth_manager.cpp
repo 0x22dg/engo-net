@@ -98,7 +98,7 @@ UserRegistry& AuthManager::get_verified_rgs() noexcept {
     return verified_users;
 }
 
-std::array<uint8_t, NONCE_LEN> generate_nonce() {
+std::array<uint8_t, NONCE_LEN> AuthManager::generate_nonce() {
     uint8_t nonce[NONCE_LEN];
     int     rc = RAND_bytes(nonce, sizeof(nonce));
     if (rc != 1)
