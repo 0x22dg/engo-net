@@ -67,7 +67,10 @@ void User::run() {
 }
 
 void User::stop() noexcept {
-    enabled = 0;
+    enabled = false;
+
+    connection->send({engo::PacketType::DISCONNECT, "bye"});
+
     logger.log(Logger::INFO, "network user interface stopped");
 }
 
