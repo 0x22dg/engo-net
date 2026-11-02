@@ -3,4 +3,4 @@
 set -e
 cd build
 
-./engo-net server
+./main/engo-net server

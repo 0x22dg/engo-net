@@ -54,12 +54,17 @@ bool UserRegistry::move_from_temp(int fd, std::vector<uint8_t> pub_key,
 bool UserRegistry::push(UserMeta user_meta) {
     if (user_meta.is_empty()) return false;
 
+    const int  fd = user_meta.fd;
+    const auto nickname = user_meta.nickname;
+    const auto pk = user_meta.pub_key;
+
     auto [it, inserted] =
-        src_by_name.try_emplace(user_meta.nickname, std::move(user_meta));
+        src_by_name.try_emplace(nickname, std::move(user_meta));
+    if (!inserted) return false;
 
     UserMeta* ptr = &it->second;
-    src_by_fd.emplace(user_meta.fd, ptr);
-    src_by_key.emplace(user_meta.pub_key, ptr);
+    src_by_fd.emplace(fd, ptr);
+    src_by_key.emplace(pk, ptr);
 
     return true;
 }

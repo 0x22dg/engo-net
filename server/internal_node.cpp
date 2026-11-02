@@ -180,6 +180,7 @@ bool InternalNode::handle_unverified(int fd, size_t idx) {
 
 bool InternalNode::handle_verified(int fd, size_t idx) {
     UserMeta* meta = auth_manager.get_verified_rgs().find(fd);
+    if (!meta || !meta->connection) return false;
 
     Connection* connection = meta->connection.get();
     if (events[idx].events & EPOLLIN) {

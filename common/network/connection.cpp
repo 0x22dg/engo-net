@@ -18,7 +18,6 @@ Connection::Connection(Connection&& other) noexcept
     : m_socket(std::move(other.m_socket)),
       recv_buf(std::move(other.recv_buf)),
       closed(other.closed) {
-    other.m_socket = -1;
     other.closed = true;
 }
 
@@ -31,7 +30,6 @@ Connection& Connection::operator=(Connection&& other) noexcept {
     recv_buf = std::move(other.recv_buf);
     closed = other.closed;
 
-    other.m_socket = -1;
     other.closed = true;
 
     return *this;
