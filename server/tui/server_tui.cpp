@@ -59,12 +59,13 @@ void ServerTUI::render() {
     buf.put(engo::Pair<size_t, size_t>{x, y++}, rect_floor, COLOR_DEFAULT,
             COLOR_DEFAULT, STYLE_BOLD);
     buf.put(engo::Pair<size_t, size_t>{x, y++},
-            "clients: " + std::to_string(state.get_clients().size()));
-    for (size_t i = 0; i < state.get_clients().size(); i++) {
-        buf.put(engo::Pair<size_t, size_t>{x, y++},
-                state.get_clients()[i].x + ":" +
-                    std::to_string(state.get_clients()[i].y) + ": connected");
+            "connected clients: " + std::to_string(state.get_clients_size()));
+
+    std::vector<std::string> metas = state.get_clients_meta();
+    for (const auto& s : metas) {
+        buf.put({x, y++}, s);
     }
+
     y++;
     buf.put(engo::Pair<size_t, size_t>{x, y++}, rect_floor, COLOR_DEFAULT,
             COLOR_DEFAULT, STYLE_BOLD);

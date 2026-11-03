@@ -48,7 +48,10 @@ bool UserRegistry::move_from_temp(int fd, std::vector<uint8_t> pub_key,
     UserMeta meta = {std::move(name), fd, std::move(pub_key),
                      std::make_unique<Connection>(std::move(it->second))};
 
-    return push(std::move(meta));
+    bool res = push(std::move(meta));
+    temp_buf.erase(it);
+
+    return res;
 }
 
 bool UserRegistry::push(UserMeta user_meta) {
@@ -75,17 +78,12 @@ void UserRegistry::erase(int fd) {
     auto it = src_by_fd.find(fd);
     if (it == src_by_fd.end()) return;
 
-    {
-        auto t = src_by_name.find(it->second->nickname);
-        src_by_name.erase(t);
-    }
-    {
-        auto t = src_by_key.find(it->second->pub_key);
-        src_by_key.erase(t);
-    }
+    const std::string          nickname = it->second->nickname;
+    const std::vector<uint8_t> key = it->second->pub_key;
 
-    src_by_fd.erase(it);
-    return;
+    src_by_fd.erase(fd);
+    src_by_key.erase(key);
+    src_by_name.erase(nickname);
 }
 
 void UserRegistry::erase(const std::string& nickname) {

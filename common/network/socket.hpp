@@ -10,6 +10,8 @@ class Socket {
     Socket(int m_socket);
     ~Socket();
 
+    void close();
+
     Socket(const Socket&) = delete;
     Socket& operator=(const Socket&) = delete;
 

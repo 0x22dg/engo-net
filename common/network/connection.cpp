@@ -4,6 +4,7 @@
 
 #include <cerrno>
 #include <cstdint>
+#include <cstring>
 #include <iostream>
 
 Connection::Connection(int m_socket) : m_socket(m_socket), closed(0) {
@@ -12,7 +13,12 @@ Connection::Connection(int m_socket) : m_socket(m_socket), closed(0) {
 
 Connection::~Connection() { close(); }
 
-void Connection::close() noexcept { closed = true; }
+void Connection::close() noexcept {
+    if (closed) return;
+
+    closed = true;
+    m_socket.close();
+}
 
 Connection::Connection(Connection&& other) noexcept
     : m_socket(std::move(other.m_socket)),
@@ -57,9 +63,12 @@ bool Connection::send(const engo::Packet& packet) {
             ::send(m_socket.get(), raw.data() + sent, raw.size() - sent, 0);
 
         if (val < 0) {
-            if (errno == EAGAIN || errno == EWOULDBLOCK) continue;
+            if (errno == EINTR) continue;
+            if (errno == EAGAIN || errno == EWOULDBLOCK) return false;
             return false;
         }
+
+        if (val == 0) return false;
 
         sent += val;
     }
@@ -68,6 +77,8 @@ bool Connection::send(const engo::Packet& packet) {
 }
 
 bool Connection::recv() {
+    if (closed || m_socket.get() < 0) return false;
+
     char temp[4096];
     while (1) {
         ssize_t val = ::recv(m_socket.get(), temp, sizeof(temp), 0);
@@ -84,6 +95,10 @@ bool Connection::recv() {
 
         if (errno == EINTR) continue;
         if (errno == EAGAIN || errno == EWOULDBLOCK) return true;
+
+        std::cerr << "[Connection] recv failed"
+                  << " fd=" << m_socket.get() << " errno=" << errno
+                  << " message=" << strerror(errno) << '\n';
 
         close();
         return false;

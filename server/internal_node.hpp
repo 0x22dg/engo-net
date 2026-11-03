@@ -44,6 +44,8 @@ class InternalNode {
     bool handle_verified(int fd, size_t idx);
 
     int  receive(ServerState& state);
+    void del_socket(int fd);
+
     void disconnect_temp(int fd);
     void disconnect_uv(int fd);
     void disconnect_v(int fd);

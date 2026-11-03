@@ -33,15 +33,6 @@ void User::run() {
         }
 
         while (auto packet = connection->get_ready_packet()) {
-            logger.tlog(Logger::INFO, "type: ", packet->header.type);
-            logger.tlog(Logger::INFO, "data:",
-                        std::string(packet->data.begin(), packet->data.end()));
-            if (msg_callback &&
-                packet->header.type == engo::PacketType::MESSAGE) {
-                msg_callback(
-                    std::string(packet->data.begin(), packet->data.end()));
-            }
-
             switch (packet->header.type) {
                 case engo::PacketType::AUTH_PROCESS:
                     auth_service.handle_server_nonce(*connection, *packet,

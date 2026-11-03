@@ -57,6 +57,7 @@ void EngoServer::execute_cmd(const std::string& input) {
 
     switch (cmd.type) {
         case CommandType::EXIT:
+            internal_node->stop();
             quit();
             break;
         case CommandType::HELP:

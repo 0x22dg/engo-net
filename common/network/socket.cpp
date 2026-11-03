@@ -14,8 +14,13 @@ Socket::Socket(int m_socket) : m_socket(m_socket) {
         throw std::runtime_error("failed to load the socket fd");
 }
 
-Socket::~Socket() {
-    if (m_socket >= 0) close(m_socket);
+Socket::~Socket() { close(); }
+
+void Socket::close() {
+    if (m_socket >= 0) {
+        ::close(m_socket);
+        m_socket = -1;
+    }
 }
 
 Socket::Socket(Socket&& other) noexcept : m_socket(other.m_socket) {
@@ -24,7 +29,7 @@ Socket::Socket(Socket&& other) noexcept : m_socket(other.m_socket) {
 
 Socket& Socket::operator=(Socket&& other) noexcept {
     if (this == &other) return *this;
-    if (m_socket >= 0) close(m_socket);
+    if (m_socket >= 0) ::close(m_socket);
 
     m_socket = other.m_socket;
     other.m_socket = -1;

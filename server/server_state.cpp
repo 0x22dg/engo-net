@@ -1,6 +1,7 @@
 #include "server_state.hpp"
 
-ServerState::ServerState() : status(UNKNOWN), addr(""), port(0), clients{} {}
+ServerState::ServerState()
+    : status(UNKNOWN), addr(""), port(0), mutex(), clients{} {}
 
 ServerState::ServerState(Status status, const std::string& addr, uint16_t port)
     : status(status), addr(addr), port(port) {}
@@ -15,9 +16,24 @@ const char* ServerState::get_status_msg() const noexcept {
     return status_msgs[status];
 }
 
-const std::vector<engo::Pair<std::string, uint16_t>>& ServerState::get_clients()
-    const noexcept {
-    return clients;
+size_t ServerState::get_clients_size() noexcept {
+    std::lock_guard<std::mutex> lock(mutex);
+    return clients.size();
+}
+
+std::vector<std::string> ServerState::get_clients_meta() noexcept {
+    std::lock_guard<std::mutex> lock(mutex);
+
+    std::vector<std::string> res;
+    res.reserve(clients.size());
+
+    for (const auto& c : clients) {
+        const ClientMeta& m = c.second;
+        std::string       isv = m.is_verified ? "verified" : "unverified";
+        res.push_back(m.addr + ":" + std::to_string(m.port) + "; " + isv);
+    }
+
+    return std::move(res);
 }
 
 void ServerState::set_addr(const std::string& addr) {
@@ -34,8 +50,30 @@ bool ServerState::set_status(Status status) {
     return 1;
 }
 
-void ServerState::push_client(const std::string& addr, uint16_t port) {
+void ServerState::push_client(int fd, const std::string& addr, uint16_t port) {
+    std::lock_guard<std::mutex> lock(mutex);
     if (addr.empty()) return;
 
-    clients.push_back({addr, port});
+    ClientMeta m = {addr, port, false};
+    clients.insert({fd, std::move(m)});
+}
+
+std::optional<ServerState::ClientMeta> ServerState::erase_client(int fd) {
+    std::lock_guard<std::mutex> lock(mutex);
+
+    auto it = clients.find(fd);
+    if (it == clients.end()) return std::nullopt;
+
+    ClientMeta meta = std::move(it->second);
+    clients.erase(fd);
+
+    return std::move(meta);
+}
+
+void ServerState::make_verified(int fd) {
+    std::lock_guard<std::mutex> lock(mutex);
+    auto                        it = clients.find(fd);
+    if (it == clients.end()) return;
+
+    it->second.is_verified = true;
 }
